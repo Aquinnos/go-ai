@@ -15,7 +15,14 @@ export async function GET() {
     orderBy: { updatedAt: 'desc' },
   });
 
-  return NextResponse.json(chats);
+  return NextResponse.json(
+    chats.map((chat) => ({
+      id: chat.id,
+      title: chat.title,
+      createdAt: chat.createdAt.toISOString(),
+      updatedAt: chat.updatedAt.toISOString(),
+    })),
+  );
 }
 
 export async function POST(request: Request) {
@@ -32,12 +39,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  const title = parsed.data.title.trim() || 'New chat';
+
   const chat = await prisma.chat.create({
     data: {
-      title: parsed.data.title,
+      title,
       userId: session.user.id,
     },
   });
 
-  return NextResponse.json(chat, { status: 201 });
+  return NextResponse.json(
+    {
+      id: chat.id,
+      title: chat.title,
+      createdAt: chat.createdAt.toISOString(),
+      updatedAt: chat.updatedAt.toISOString(),
+    },
+    { status: 201 },
+  );
 }

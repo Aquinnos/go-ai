@@ -31,7 +31,15 @@ export async function GET(_request: Request, context: RouteContext) {
     orderBy: { createdAt: 'asc' },
   });
 
-  return NextResponse.json(messages);
+  return NextResponse.json(
+    messages.map((message) => ({
+      id: message.id,
+      chatId: message.chatId,
+      role: message.role as 'user' | 'assistant',
+      content: message.content,
+      createdAt: message.createdAt.toISOString(),
+    })),
+  );
 }
 
 export async function POST(request: Request, context: RouteContext) {
@@ -106,7 +114,13 @@ export async function POST(request: Request, context: RouteContext) {
   });
 
   return NextResponse.json({
-    messages: [userMessage, assistantMessage],
+    messages: [userMessage, assistantMessage].map((message) => ({
+      id: message.id,
+      chatId: message.chatId,
+      role: message.role as 'user' | 'assistant',
+      content: message.content,
+      createdAt: message.createdAt.toISOString(),
+    })),
     remaining: quota.remaining,
   });
 }
