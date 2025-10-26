@@ -44,6 +44,29 @@ export async function fetchMessages(chatId: string): Promise<ChatMessage[]> {
   return handleResponse<ChatMessage[]>(response);
 }
 
+export async function fetchChat(chatId: string): Promise<ChatSummary> {
+  const response = await fetch(`/api/chats/${chatId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return handleResponse<ChatSummary>(response);
+}
+
+export async function renameChat(chatId: string, title: string): Promise<ChatSummary> {
+  const response = await fetch(`/api/chats/${chatId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ title }),
+  });
+
+  return handleResponse<ChatSummary>(response);
+}
+
 interface SendMessageResult {
   messages: ChatMessage[];
   remaining: number;
@@ -59,4 +82,15 @@ export async function sendMessage(chatId: string, prompt: string): Promise<SendM
   });
 
   return handleResponse<SendMessageResult>(response);
+}
+
+export async function deleteChat(chatId: string): Promise<void> {
+  const response = await fetch(`/api/chats/${chatId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  await handleResponse<{ success: boolean }>(response);
 }

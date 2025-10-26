@@ -3,7 +3,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ChevronsRight, Settings, LogOut } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { LogOut, Menu, MoreHorizontal, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { signOut } from 'next-auth/react';
 
@@ -11,9 +17,23 @@ interface ChatHeaderProps {
   userName?: string;
   className?: string;
   onToggleSidebar?: () => void;
+  onRenameChat?: () => void;
+  onDeleteChat?: () => void;
+  isRenaming?: boolean;
+  isDeleting?: boolean;
+  hasActiveChat?: boolean;
 }
 
-export function ChatHeader({ userName, className, onToggleSidebar }: ChatHeaderProps) {
+export function ChatHeader({
+  userName,
+  className,
+  onToggleSidebar,
+  onRenameChat,
+  onDeleteChat,
+  isRenaming,
+  isDeleting,
+  hasActiveChat,
+}: ChatHeaderProps) {
   return (
     <header
       className={cn(
@@ -26,10 +46,10 @@ export function ChatHeader({ userName, className, onToggleSidebar }: ChatHeaderP
           variant="ghost"
           size="icon"
           onClick={onToggleSidebar}
-          className="hidden md:inline-flex"
+          className="inline-flex lg:hidden"
         >
-          <ChevronsRight className="h-5 w-5" />
-          <span className="sr-only">Collapse sidebar</span>
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle sidebar</span>
         </Button>
         <Link href="/" className="text-lg font-semibold tracking-tight">
           Gemini Clone
@@ -37,6 +57,39 @@ export function ChatHeader({ userName, className, onToggleSidebar }: ChatHeaderP
       </div>
 
       <div className="flex items-center gap-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" disabled={!hasActiveChat}>
+              <MoreHorizontal className="h-5 w-5" />
+              <span className="sr-only">Chat options</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem
+              disabled={!hasActiveChat || isRenaming}
+              onSelect={(event) => {
+                event.preventDefault();
+                if (hasActiveChat && !isRenaming) {
+                  onRenameChat?.();
+                }
+              }}
+            >
+              {isRenaming ? 'Renaming…' : 'Rename chat'}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              disabled={!hasActiveChat || isDeleting}
+              onSelect={(event) => {
+                event.preventDefault();
+                if (hasActiveChat && !isDeleting) {
+                  onDeleteChat?.();
+                }
+              }}
+            >
+              {isDeleting ? 'Deleting…' : 'Delete chat'}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button variant="ghost" size="icon">
           <Settings className="h-5 w-5" />
           <span className="sr-only">Settings</span>

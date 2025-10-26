@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatChatTimestamp } from '@/lib/date';
 import { cn } from '@/lib/utils';
 import { Clock, Plus, Search } from 'lucide-react';
@@ -11,6 +12,7 @@ interface ChatSidebarProps {
   className?: string;
   activeChatId?: string | null;
   isCreating?: boolean;
+  isLoading?: boolean;
   onNewChat?: () => void;
   onSelectChat?: (chatId: string) => void;
 }
@@ -20,9 +22,12 @@ export function ChatSidebar({
   className,
   activeChatId,
   isCreating,
+  isLoading,
   onNewChat,
   onSelectChat,
 }: ChatSidebarProps) {
+  const isBusy = Boolean(isCreating) || Boolean(isLoading);
+
   return (
     <aside
       className={cn(
@@ -35,7 +40,7 @@ export function ChatSidebar({
           className="w-full justify-start gap-2"
           variant="secondary"
           onClick={onNewChat}
-          disabled={isCreating}
+          disabled={isBusy}
         >
           <Plus className="h-4 w-4" />
           New chat
@@ -50,43 +55,53 @@ export function ChatSidebar({
         <p className="px-2 text-xs font-medium uppercase tracking-wider text-slate-400">
           Recent
         </p>
-        <ul className="mt-3 space-y-1">
-          {chats.map((chat) => {
-            const isActive = chat.id === activeChatId;
-            const updatedLabel = chat.updatedAt
-              ? formatChatTimestamp(chat.updatedAt)
-              : undefined;
-
-            return (
-              <li key={chat.id}>
-                <button
-                  type="button"
-                  onClick={() => onSelectChat?.(chat.id)}
-                  className={cn(
-                    'group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition',
-                    isActive
-                      ? 'bg-slate-800/90 text-slate-100'
-                      : 'hover:bg-slate-800/80 text-slate-200',
-                  )}
-                >
-                  <Clock className="h-4 w-4 text-slate-500 group-hover:text-slate-300" />
-                  <div className="flex flex-1 flex-col overflow-hidden">
-                    <span className="truncate font-medium text-slate-100">
-                      {chat.title}
-                    </span>
-                    {updatedLabel ? (
-                      <span className="truncate text-xs text-slate-500">
-                        {updatedLabel}
-                      </span>
-                    ) : null}
-                  </div>
-                </button>
+        {isLoading ? (
+          <ul className="mt-3 space-y-1">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <li key={index}>
+                <Skeleton className="h-12 w-full rounded-xl bg-slate-800/70" />
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ul>
+        ) : (
+          <ul className="mt-3 space-y-1">
+            {chats.map((chat) => {
+              const isActive = chat.id === activeChatId;
+              const updatedLabel = chat.updatedAt
+                ? formatChatTimestamp(chat.updatedAt)
+                : undefined;
 
-        {chats.length === 0 ? (
+              return (
+                <li key={chat.id}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectChat?.(chat.id)}
+                    className={cn(
+                      'group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm transition',
+                      isActive
+                        ? 'bg-slate-800/90 text-slate-100'
+                        : 'hover:bg-slate-800/80 text-slate-200',
+                    )}
+                  >
+                    <Clock className="h-4 w-4 text-slate-500 group-hover:text-slate-300" />
+                    <div className="flex flex-1 flex-col overflow-hidden">
+                      <span className="truncate font-medium text-slate-100">
+                        {chat.title}
+                      </span>
+                      {updatedLabel ? (
+                        <span className="truncate text-xs text-slate-500">
+                          {updatedLabel}
+                        </span>
+                      ) : null}
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {!isLoading && chats.length === 0 ? (
           <p className="mt-6 px-3 text-sm text-slate-500">
             No chats yet. Start a new conversation to see it here.
           </p>
