@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth-helper';
 import prisma from '@/lib/prisma';
 import { chatUpdateSchema } from '@/lib/validation/chat';
+import { logger } from '@/lib/logger';
 
 interface RouteContext {
   params: {
@@ -21,6 +22,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   });
 
   if (!chat) {
+    logger.warn('Chat not found on GET', { chatId: params.chatId, userId: session.user.id });
     return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
   }
 
@@ -44,6 +46,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   });
 
   if (!chat) {
+    logger.warn('Chat not found on PATCH', { chatId: params.chatId, userId: session.user.id });
     return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
   }
 
@@ -51,6 +54,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const parsed = chatUpdateSchema.safeParse(payload);
 
   if (!parsed.success) {
+    logger.warn('Invalid chat update payload', { errors: parsed.error.flatten(), chatId: chat.id });
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
@@ -81,13 +85,19 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
   });
 
   if (!chat) {
+    logger.warn('Chat not found on DELETE', { chatId: params.chatId, userId: session.user.id });
     return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
   }
 
-  await prisma.$transaction([
-    prisma.message.deleteMany({ where: { chatId: chat.id } }),
-    prisma.chat.delete({ where: { id: chat.id } }),
-  ]);
+  try {
+    await prisma.$transaction([
+      prisma.message.deleteMany({ where: { chatId: chat.id } }),
+      prisma.chat.delete({ where: { id: chat.id } }),
+    ]);
+  } catch (error) {
+    logger.error('Failed to delete chat', { chatId: chat.id, error });
+    return NextResponse.json({ error: 'Failed to delete chat' }, { status: 500 });
+  }
 
   return NextResponse.json({ success: true });
 }

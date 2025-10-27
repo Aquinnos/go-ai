@@ -90,9 +90,11 @@ export function ChatHeader({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button variant="ghost" size="icon">
-          <Settings className="h-5 w-5" />
-          <span className="sr-only">Settings</span>
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/settings">
+            <Settings className="h-5 w-5" />
+            <span className="sr-only">Settings</span>
+          </Link>
         </Button>
         <Button variant="ghost" size="icon" onClick={() => signOut({ callbackUrl: '/signin' })}>
           <LogOut className="h-5 w-5" />

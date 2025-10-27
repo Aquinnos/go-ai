@@ -35,6 +35,12 @@
       ],
       "@/types/*": [
         "./types/*"
+      ],
+      "@/components/providers/*": [
+        "./components/providers/*"
+      ],
+      "@/components/ui/*": [
+        "./components/ui/*"
       ]
     }
   },
