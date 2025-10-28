@@ -403,7 +403,7 @@ export function ChatShell({ userName }: ChatShellProps) {
                           ) : null}
                           <ChatComposer
                             onSubmit={handleSendPrompt}
-                            placeholder="Ask Gemini Clone..."
+                            placeholder="Ask Go AI..."
                             className={cn('mx-auto w-full max-w-2xl')}
                             isSubmitting={isComposerBusy}
                           />

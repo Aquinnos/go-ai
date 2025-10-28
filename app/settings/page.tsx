@@ -5,7 +5,7 @@ import { AccountPasswordForm } from '@/components/forms/account-password-form';
 import { AccountSettingsCard } from '@/components/settings/account-settings-card';
 
 export const metadata: Metadata = {
-  title: 'Account settings | Gemini Clone',
+  title: 'Account settings | Go AI',
   description: 'Manage your profile details, avatar and password.',
 };
 
@@ -25,7 +25,7 @@ export default async function SettingsPage() {
 
       <AccountSettingsCard
         title="Profile information"
-        description="Adjust how your name and avatar appear across Gemini Clone."
+        description="Adjust how your name and avatar appear across Go AI."
       >
         <AccountProfileForm className="flex flex-col gap-6" />
       </AccountSettingsCard>

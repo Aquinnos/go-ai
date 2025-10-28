@@ -5,13 +5,30 @@ import { messageCreateSchema } from '@/lib/validation/chat';
 import { generateChatResponse, type ChatMessage } from '@/lib/gemini';
 import { consumeQuota } from '@/lib/quota';
 
-interface RouteContext {
-  params: {
-    chatId: string;
-  };
+type RouteParamsContext = {
+  params: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function extractChatId(params: Record<string, string | string[] | undefined>) {
+  const chatIdParam = params.chatId;
+
+  if (!chatIdParam || Array.isArray(chatIdParam)) {
+    return null;
+  }
+
+  return chatIdParam;
 }
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(
+  _request: Request,
+  context: RouteParamsContext,
+) {
+  const params = await context.params;
+  const chatId = extractChatId(params);
+
+  if (!chatId) {
+    return NextResponse.json({ error: 'Invalid chat ID' }, { status: 400 });
+  }
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -19,7 +36,7 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   const chat = await prisma.chat.findFirst({
-    where: { id: context.params.chatId, userId: session.user.id },
+    where: { id: chatId, userId: session.user.id },
   });
 
   if (!chat) {
@@ -41,8 +58,16 @@ export async function GET(_request: Request, context: RouteContext) {
     })),
   );
 }
+export async function POST(
+  request: Request,
+  context: RouteParamsContext,
+) {
+  const params = await context.params;
+  const chatId = extractChatId(params);
 
-export async function POST(request: Request, context: RouteContext) {
+  if (!chatId) {
+    return NextResponse.json({ error: 'Invalid chat ID' }, { status: 400 });
+  }
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -50,7 +75,7 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const chat = await prisma.chat.findFirst({
-    where: { id: context.params.chatId, userId: session.user.id },
+    where: { id: chatId, userId: session.user.id },
   });
 
   if (!chat) {

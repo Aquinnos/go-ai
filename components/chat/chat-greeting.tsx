@@ -12,7 +12,7 @@ export function ChatGreeting({ name, className }: ChatGreetingProps) {
         {name ? `Hello, ${name}!` : 'Hello!'}
       </h1>
       <p className="text-sm text-slate-400">
-        Ask Gemini Clone anything – from quick ideas to deep dives.
+        Ask Go AI anything – from quick ideas to deep dives.
       </p>
     </div>
   );

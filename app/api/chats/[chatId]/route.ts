@@ -4,13 +4,27 @@ import prisma from '@/lib/prisma';
 import { chatUpdateSchema } from '@/lib/validation/chat';
 import { logger } from '@/lib/logger';
 
-interface RouteContext {
-  params: {
-    chatId: string;
-  };
+type RouteParamsContext = {
+  params: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function extractChatId(params: Record<string, string | string[] | undefined>) {
+  const chatIdParam = params.chatId;
+
+  if (!chatIdParam || Array.isArray(chatIdParam)) {
+    return null;
+  }
+
+  return chatIdParam;
 }
 
-export async function GET(_request: Request, { params }: RouteContext) {
+export async function GET(_request: Request, context: RouteParamsContext) {
+  const params = await context.params;
+  const chatId = extractChatId(params);
+
+  if (!chatId) {
+    return NextResponse.json({ error: 'Invalid chat ID' }, { status: 400 });
+  }
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -18,11 +32,11 @@ export async function GET(_request: Request, { params }: RouteContext) {
   }
 
   const chat = await prisma.chat.findFirst({
-    where: { id: params.chatId, userId: session.user.id },
+    where: { id: chatId, userId: session.user.id },
   });
 
   if (!chat) {
-    logger.warn('Chat not found on GET', { chatId: params.chatId, userId: session.user.id });
+    logger.warn('Chat not found on GET', { chatId, userId: session.user.id });
     return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
   }
 
@@ -34,7 +48,13 @@ export async function GET(_request: Request, { params }: RouteContext) {
   });
 }
 
-export async function PATCH(request: Request, { params }: RouteContext) {
+export async function PATCH(request: Request, context: RouteParamsContext) {
+  const params = await context.params;
+  const chatId = extractChatId(params);
+
+  if (!chatId) {
+    return NextResponse.json({ error: 'Invalid chat ID' }, { status: 400 });
+  }
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -42,11 +62,11 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   }
 
   const chat = await prisma.chat.findFirst({
-    where: { id: params.chatId, userId: session.user.id },
+    where: { id: chatId, userId: session.user.id },
   });
 
   if (!chat) {
-    logger.warn('Chat not found on PATCH', { chatId: params.chatId, userId: session.user.id });
+    logger.warn('Chat not found on PATCH', { chatId, userId: session.user.id });
     return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
   }
 
@@ -73,7 +93,13 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   });
 }
 
-export async function DELETE(_request: Request, { params }: RouteContext) {
+export async function DELETE(_request: Request, context: RouteParamsContext) {
+  const params = await context.params;
+  const chatId = extractChatId(params);
+
+  if (!chatId) {
+    return NextResponse.json({ error: 'Invalid chat ID' }, { status: 400 });
+  }
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -81,11 +107,11 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
   }
 
   const chat = await prisma.chat.findFirst({
-    where: { id: params.chatId, userId: session.user.id },
+    where: { id: chatId, userId: session.user.id },
   });
 
   if (!chat) {
-    logger.warn('Chat not found on DELETE', { chatId: params.chatId, userId: session.user.id });
+    logger.warn('Chat not found on DELETE', { chatId, userId: session.user.id });
     return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
   }
 

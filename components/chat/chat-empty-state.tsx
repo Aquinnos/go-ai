@@ -15,7 +15,7 @@ export function ChatEmptyState({ onNewChat, className, isCreating }: ChatEmptySt
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold text-slate-100">Start a new chat</h2>
         <p className="max-w-md text-sm text-slate-400">
-          Explore ideas, generate content, or dive into topics. Ask anything and Gemini Clone will respond instantly.
+          Explore ideas, generate content, or dive into topics. Ask anything and Go AI will respond instantly.
         </p>
       </div>
       <Button onClick={onNewChat} disabled={isCreating}>

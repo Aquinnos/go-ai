@@ -4,7 +4,7 @@ import { SignInForm } from '@/components/forms/sign-in-form';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'Sign in | Gemini Clone',
+  title: 'Sign in | Go AI',
 };
 
 export default function SignInPage() {
@@ -15,7 +15,7 @@ export default function SignInPage() {
           Welcome back
         </h1>
         <p className="text-sm text-slate-300">
-          Sign in to continue exploring ideas with Gemini.
+          Sign in to continue exploring ideas with Go AI.
         </p>
       </div>
 

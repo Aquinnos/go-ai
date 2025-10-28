@@ -52,7 +52,7 @@ export function ChatHeader({
           <span className="sr-only">Toggle sidebar</span>
         </Button>
         <Link href="/" className="text-lg font-semibold tracking-tight">
-          Gemini Clone
+          Go AI
         </Link>
       </div>
 
