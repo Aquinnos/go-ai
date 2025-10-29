@@ -14,9 +14,19 @@ export const signUpSchema = z.object({
 export type SignInInput = z.infer<typeof signInSchema>;
 export type SignUpInput = z.infer<typeof signUpSchema>;
 
+const dataUrlPattern = /^data:image\/[a-zA-Z]+;base64,/;
+
 export const profileUpdateSchema = z.object({
   name: z.string().min(2).max(100),
-  image: z.union([z.string().url(), z.literal('')]).optional(),
+  image: z
+    .union([
+      z.string().url(),
+      z.string().regex(dataUrlPattern, {
+        message: 'Avatar must be a valid image.',
+      }),
+      z.literal(''),
+    ])
+    .optional(),
 });
 
 export const passwordUpdateSchema = z

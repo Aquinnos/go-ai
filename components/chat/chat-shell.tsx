@@ -26,6 +26,7 @@ import type { ChatMessage, ChatSummary } from '@/types/chat';
 
 interface ChatShellProps {
   userName?: string | null;
+  userAvatar?: string | null;
 }
 
 interface SendMessageVariables {
@@ -48,7 +49,7 @@ function getErrorMessage(error: unknown) {
   return 'Something went wrong. Please try again.';
 }
 
-export function ChatShell({ userName }: ChatShellProps) {
+export function ChatShell({ userName, userAvatar }: ChatShellProps) {
   const queryClient = useQueryClient();
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [composerError, setComposerError] = useState<string | null>(null);
@@ -317,6 +318,7 @@ export function ChatShell({ userName }: ChatShellProps) {
       <div className="flex flex-1 flex-col">
         <ChatHeader
           userName={userName ?? undefined}
+          userAvatar={userAvatar ?? undefined}
           onToggleSidebar={toggleSidebar}
           onRenameChat={handleRenameChat}
           onDeleteChat={handleDeleteChat}

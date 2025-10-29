@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +23,17 @@ import {
 } from '@/lib/api/account';
 import { profileUpdateSchema, type ProfileUpdateInput } from '@/lib/validation/auth';
 
+const MAX_AVATAR_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Unable to read file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 interface AccountProfileFormProps {
   className?: string;
 }
@@ -30,6 +41,7 @@ interface AccountProfileFormProps {
 export function AccountProfileForm({ className }: AccountProfileFormProps) {
   const queryClient = useQueryClient();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isImageProcessing, setIsImageProcessing] = useState(false);
 
   const { data, isLoading } = useQuery<AccountProfile>({
     queryKey: ['account', 'profile'],
@@ -63,6 +75,61 @@ export function AccountProfileForm({ className }: AccountProfileFormProps) {
       setPreviewUrl(profile.image ?? null);
     },
   });
+
+  const handleFileChange = useCallback(
+    async (event: ChangeEvent<HTMLInputElement>, onChange: (value: string) => void) => {
+      const file = event.target.files?.[0];
+
+      if (!file) {
+        return;
+      }
+
+      event.target.value = '';
+
+      if (!file.type.startsWith('image/')) {
+        form.setError('image', {
+          type: 'manual',
+          message: 'Please choose an image file.',
+        });
+        return;
+      }
+
+      if (file.size > MAX_AVATAR_FILE_SIZE) {
+        form.setError('image', {
+          type: 'manual',
+          message: 'Image must be 2MB or smaller.',
+        });
+        return;
+      }
+
+      setIsImageProcessing(true);
+
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
+
+        form.clearErrors('image');
+        onChange(dataUrl);
+        setPreviewUrl(dataUrl);
+      } catch (error) {
+        form.setError('image', {
+          type: 'manual',
+          message: error instanceof Error ? error.message : 'We could not read that image. Try again.',
+        });
+      } finally {
+        setIsImageProcessing(false);
+      }
+    },
+    [form],
+  );
+
+  const handleRemoveImage = useCallback(
+    (onChange: (value: string) => void) => {
+      onChange('');
+      form.clearErrors('image');
+      setPreviewUrl(null);
+    },
+    [form],
+  );
 
   const onSubmit = (values: ProfileUpdateInput) => {
     const sanitized: ProfileUpdateInput = {
@@ -105,36 +172,67 @@ export function AccountProfileForm({ className }: AccountProfileFormProps) {
             name="image"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Avatar URL</FormLabel>
+                <FormLabel>Avatar</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="https://example.com/avatar.png"
-                    autoComplete="off"
-                    disabled={mutation.isPending}
-                    {...field}
-                    onChange={(event) => {
-                      field.onChange(event);
-                      setPreviewUrl(event.target.value);
-                    }}
-                  />
+                  <div className="flex flex-col gap-4">
+                    <input
+                      type="hidden"
+                      name={field.name}
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
+                    />
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      disabled={mutation.isPending || isImageProcessing}
+                      onBlur={field.onBlur}
+                      onChange={(event) =>
+                        void handleFileChange(event, field.onChange)
+                      }
+                    />
+                    {isImageProcessing ? (
+                      <p className="text-xs text-slate-400">Processing image…</p>
+                    ) : null}
+                    <div className="flex items-center gap-4">
+                      <div className="relative h-20 w-20 overflow-hidden rounded-full border border-slate-800 bg-slate-900">
+                        {previewUrl ? (
+                          <Image
+                            src={previewUrl}
+                            alt="Avatar preview"
+                            fill
+                            sizes="80px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-xs text-slate-500">
+                            No image
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2 text-xs text-slate-500">
+                        <p>Upload a JPG, PNG, or GIF up to 2MB. We store it locally for your account only.</p>
+                        {previewUrl ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="w-fit px-2"
+                            onClick={() => handleRemoveImage(field.onChange)}
+                            disabled={mutation.isPending || isImageProcessing}
+                          >
+                            Remove image
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          <div className="flex items-center gap-4">
-            <div className="relative h-20 w-20 overflow-hidden rounded-full border border-slate-800 bg-slate-900">
-              {previewUrl ? (
-                <Image src={previewUrl} alt="Avatar preview" fill sizes="80px" className="object-cover" />
-              ) : (
-                <div className="flex h-full items-center justify-center text-xs text-slate-500">No image</div>
-              )}
-            </div>
-            <p className="text-xs text-slate-500">
-              Provide a direct image URL. Future versions could include file upload support.
-            </p>
-          </div>
 
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? 'Saving…' : 'Save changes'}

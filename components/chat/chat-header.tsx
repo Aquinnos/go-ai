@@ -1,6 +1,5 @@
 "use client";
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,9 +11,11 @@ import {
 import { LogOut, Menu, MoreHorizontal, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { signOut } from 'next-auth/react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface ChatHeaderProps {
   userName?: string;
+  userAvatar?: string | null;
   className?: string;
   onToggleSidebar?: () => void;
   onRenameChat?: () => void;
@@ -26,6 +27,7 @@ interface ChatHeaderProps {
 
 export function ChatHeader({
   userName,
+  userAvatar,
   className,
   onToggleSidebar,
   onRenameChat,
@@ -101,13 +103,12 @@ export function ChatHeader({
           <span className="sr-only">Sign out</span>
         </Button>
         <div className="flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-sm">
-          <Image
-            src="/avatar-placeholder.png"
-            alt={userName ?? 'User avatar'}
-            width={28}
-            height={28}
-            className="rounded-full"
-          />
+          <Avatar className="h-7 w-7">
+            <AvatarImage src={userAvatar ?? undefined} alt={userName ?? 'User avatar'} />
+            <AvatarFallback className="text-xs text-slate-300">
+              {(userName ?? 'Guest').slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <span className="hidden text-slate-200 md:inline">
             {userName ?? 'Guest'}
           </span>
